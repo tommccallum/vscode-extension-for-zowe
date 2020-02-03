@@ -87,7 +87,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             if (favoriteDataSetPattern.test(line)) {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 try {
-                    const profile = Profiles.getInstance().loadNamedProfile(sesName);
+                    const profile = await (await Profiles.getInstanceFor()).loadNamedProfile(sesName);
                     const session = ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     let node: ZoweNode;
                     if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.DS_PDS_CONTEXT) {
@@ -117,7 +117,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 const sesName = line.substring(1, line.lastIndexOf("]")).trim();
                 let profile: IProfileLoaded;
                 try {
-                    profile = Profiles.getInstance().loadNamedProfile(sesName);
+                    profile = await (await Profiles.getInstanceFor()).loadNamedProfile(sesName);
                 } catch (error) {
                     const errMessage: string =
                     localize("loadNamedProfile.error.profileName",
@@ -204,12 +204,12 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
     public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            const zosmfProfile: IProfileLoaded = await (await Profiles.getInstanceFor()).loadNamedProfile(sessionName);
             if (zosmfProfile) {
                 this.addSingleSession(zosmfProfile);
             }
         } else {
-            const profiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            const profiles: IProfileLoaded[] = await (await Profiles.getInstanceFor()).allProfiles;
             for (const zosmfProfile of profiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
@@ -222,7 +222,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
+                this.addSingleSession(await (await Profiles.getInstanceFor()).getDefaultProfile());
             }
         }
         this.refresh();
@@ -395,7 +395,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
         }
         if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
             try {
-                const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                const values = await (await Profiles.getInstanceFor()).promptCredentials(sesNamePrompt);
                 if (values !== undefined) {
                     usrNme = values [0];
                     passWrd = values [1];
@@ -511,7 +511,7 @@ export class DatasetTree implements IZoweTree<ZoweNode> {
             }
             if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
                 try {
-                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                    const values = await (await Profiles.getInstanceFor()).promptCredentials(sesNamePrompt);
                     if (values !== undefined) {
                         usrNme = values [0];
                         passWrd = values [1];

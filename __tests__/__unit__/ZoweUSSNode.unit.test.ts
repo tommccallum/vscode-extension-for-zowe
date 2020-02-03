@@ -57,7 +57,7 @@ describe("Unit Tests (Jest)", () => {
     beforeEach(() => {
         const mockLoadNamedProfile = jest.fn();
         mockLoadNamedProfile.mockReturnValue(profileOne);
-        Object.defineProperty(Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstanceFor", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "firstName"}, {name: "secondName"}],
@@ -74,7 +74,7 @@ describe("Unit Tests (Jest)", () => {
         jest.resetAllMocks();
     });
 
-    Profiles.createInstance(Logger.getAppLogger());
+    Profiles.getInstanceFor();
 
     /*************************************************************************************************************
      * Checks that the ZoweUSSNode structure is the same as the snapshot

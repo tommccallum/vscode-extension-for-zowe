@@ -130,12 +130,12 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
     public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, persisted profiles or default if none passed
         if (sessionName) {
-            const profile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            const profile: IProfileLoaded = await (await Profiles.getInstanceFor()).loadNamedProfile(sessionName);
             if (profile) {
                 this.addSingleSession(profile);
             }
         } else {
-            const allProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            const allProfiles: IProfileLoaded[] = await (await Profiles.getInstanceFor()).allProfiles;
             for (const profile of allProfiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === profile.name)) {
@@ -148,7 +148,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
+                this.addSingleSession(await (await Profiles.getInstanceFor()).getDefaultProfile());
             }
         }
         this.refresh();
@@ -255,7 +255,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
             let baseEncd: string;
             if ((!element.getSession().ISession.user) || (!element.getSession().ISession.password)) {
                 try {
-                    const values = await Profiles.getInstance().promptCredentials(element.mProfileName);
+                    const values = await (await Profiles.getInstanceFor()).promptCredentials(element.mProfileName);
                     if (values !== undefined) {
                         usrNme = values [0];
                         passWrd = values [1];
@@ -321,7 +321,7 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
         let baseEncd: string;
         if ((!(node.getSession().ISession.user).trim()) || (!(node.getSession().ISession.password).trim())) {
             try {
-                const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
+                const values = await (await Profiles.getInstanceFor()).promptCredentials(node.mProfileName);
                 if (values !== undefined) {
                     usrNme = values [0];
                     passWrd = values [1];
@@ -428,12 +428,12 @@ export class USSTree implements IZoweTree<ZoweUSSNode> {
         const favoriteSearchPattern = /^\[.+\]\:\s.*\{uss_session\}$/;
         const directorySearchPattern = /^\[.+\]\:\s.*\{directory\}$/;
         const lines: string[] = this.mHistory.readFavorites();
-        lines.forEach((line) => {
+        lines.forEach(async (line) => {
             const profileName = line.substring(1, line.lastIndexOf("]"));
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             try {
-                const profile = Profiles.getInstance().loadNamedProfile(sesName);
+                const profile = await (await Profiles.getInstanceFor()).loadNamedProfile(sesName);
                 const session = ZoweExplorerApiRegister.getUssApi(profile).getSession();
                 let node: ZoweUSSNode;
                 if (directorySearchPattern.test(line)) {

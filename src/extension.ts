@@ -154,7 +154,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             }
         }
 
-        await Profiles.createInstance(log);
+        await Profiles.getInstanceFor();
         // Initialize dataset provider
         datasetProvider = await createDatasetTree(log);
         // Initialize uss provider
@@ -292,14 +292,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             stopCommand(job);
         });
         vscode.commands.registerCommand("zowe.refreshJobsServer", async (node) => refreshJobsServer(node, jobsProvider));
-        vscode.commands.registerCommand("zowe.refreshAllJobs", () => {
+        vscode.commands.registerCommand("zowe.refreshAllJobs", async () => {
             jobsProvider.mSessionNodes.forEach((jobNode) => {
                 if (jobNode.contextValue === JOBS_SESSION_CONTEXT) {
                     jobNode.reset();
                 }
             });
             jobsProvider.refresh();
-            Profiles.getInstance().refresh();
+            (await Profiles.getInstanceFor()).refresh();
         });
         vscode.commands.registerCommand("zowe.addJobsSession", () => addZoweSession(jobsProvider));
         vscode.commands.registerCommand("zowe.setOwner", (node) => {
@@ -528,7 +528,7 @@ export async function submitJcl(datasetProvider: DatasetTree) {
     // get session name
     const sessionregex = /\[(.*)(\])(?!.*\])/g;
     const regExp = sessionregex.exec(doc.fileName);
-    const profiles = await Profiles.getInstance();
+    const profiles = await Profiles.getInstanceFor();
     let sessProfileName;
     if (regExp === null) {
         const allProfiles: IProfileLoaded[] = profiles.allProfiles;
@@ -588,7 +588,7 @@ export async function submitMember(node: ZoweNode) {
     let sesName;
     let sessProfile;
     let regex;
-    const profiles = await Profiles.getInstance();
+    const profiles = await Profiles.getInstanceFor();
     switch (node.mParent.contextValue) {
         case (FAVORITE_CONTEXT):
             regex = labelregex.exec(node.label);
@@ -637,7 +637,7 @@ export async function submitMember(node: ZoweNode) {
  */
 export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>) {
 
-    const allProfiles = (await Profiles.getInstance()).allProfiles;
+    const allProfiles = await (await Profiles.getInstanceFor()).allProfiles;
     const createNewProfile = "Create a New Connection to z/OS";
     let chosenProfile: string;
 
@@ -646,8 +646,8 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
         return profile.name;
     });
     // Filter to list of the APIs available for current tree explorer
-    profileNamesList = profileNamesList.filter((profileName) => {
-        const profile = Profiles.getInstance().loadNamedProfile(profileName);
+    profileNamesList = profileNamesList.filter(async (profileName) => {
+        const profile = await (await Profiles.getInstanceFor()).loadNamedProfile(profileName);
         if (zoweFileProvider instanceof USSTree) {
             const ussProfileTypes = ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
             return ussProfileTypes.includes(profile.type);
@@ -721,13 +721,13 @@ export async function addZoweSession(zoweFileProvider: IZoweTree<IZoweTreeNode>)
         chosenProfile = profileName;
         log.debug(localize("addSession.log.debug.createNewProfile", "User created a new profile"));
         try {
-            newprofile = await Profiles.getInstance().createNewConnection(chosenProfile);
+            newprofile = await (await Profiles.getInstanceFor()).createNewConnection(chosenProfile);
         } catch (error) {
             await utils.errorHandling(error, chosenProfile, error.message);
         }
         if (newprofile) {
             try {
-                await Profiles.getInstance().refresh();
+                await (await Profiles.getInstanceFor()).refresh();
             } catch (error) {
                 await utils.errorHandling(error, newprofile, error.message);
             }
@@ -773,7 +773,7 @@ export async function createFile(node: ZoweNode, datasetProvider: DatasetTree) {
 
     if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
         try {
-            const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+            const values = await (await Profiles.getInstanceFor()).promptCredentials(sesNamePrompt);
             if (values !== undefined) {
                 usrNme = values[0];
                 passWrd = values[1];
@@ -1459,7 +1459,7 @@ export async function openPS(node: ZoweNode, previewMember: boolean, datasetProv
     }
     if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
         try {
-            const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+            const values = await (await Profiles.getInstanceFor()).promptCredentials(sesNamePrompt);
             if (values !== undefined) {
                 usrNme = values[0];
                 passWrd = values[1];
@@ -1545,7 +1545,7 @@ export async function refreshAll(datasetProvider: DatasetTree) {
         }
     });
     datasetProvider.refresh();
-    Profiles.getInstance().refresh();
+    await (await Profiles.getInstanceFor()).refresh();
 }
 
 /**
@@ -1689,7 +1689,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: Datase
     const start = path.join(DS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));
-    const profile = (await Profiles.getInstance()).loadNamedProfile(sesName);
+    const profile = await (await Profiles.getInstanceFor()).loadNamedProfile(sesName);
     if (!profile) {
         log.error(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
         return vscode.window.showErrorMessage(localize("saveFile.log.error.session", "Couldn't locate session when saving data set!"));
@@ -1916,7 +1916,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: USS
 export async function openUSS(node: ZoweUSSNode, download = false, previewFile: boolean, ussFileProvider?: USSTree) {
     if ((!node.getSession().ISession.user) || (!node.getSession().ISession.password)) {
         try {
-            const values = await Profiles.getInstance().promptCredentials(node.mProfileName);
+            const values = await (await Profiles.getInstanceFor()).promptCredentials(node.mProfileName);
             if (values !== undefined) {
                 usrNme = values[0];
                 passWrd = values[1];
@@ -2053,11 +2053,11 @@ export async function stopCommand(job: Job) {
 }
 
 export async function getSpoolContent(session: string, spool: IJobFile) {
-    const zosmfProfile = Profiles.getInstance().loadNamedProfile(session);
+    const zosmfProfile = await (await Profiles.getInstanceFor()).loadNamedProfile(session);
     const spoolSess = zowe.ZosmfSession.createBasicZosmfSession(zosmfProfile.profile);
     if ((!spoolSess.ISession.user) || (!spoolSess.ISession.password)) {
         try {
-            const values = await Profiles.getInstance().promptCredentials(session);
+            const values = await (await Profiles.getInstanceFor()).promptCredentials(session);
             if (values !== undefined) {
                 usrNme = values[0];
                 passWrd = values[1];
@@ -2107,7 +2107,7 @@ export async function refreshJobsServer(node: Job, jobsProvider: ZosJobsProvider
     }
     if ((!node.session.ISession.user) || (!node.session.ISession.password)) {
         try {
-            const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+            const values = await (await Profiles.getInstanceFor()).promptCredentials(sesNamePrompt);
             if (values !== undefined) {
                 usrNme = values[0];
                 passWrd = values[1];

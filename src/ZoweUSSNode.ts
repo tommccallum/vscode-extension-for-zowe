@@ -89,10 +89,10 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
         }
         // TODO: this should not be necessary of each node gets initialized with the profile reference.
         if (mProfileName) {
-            this.profile = Profiles.getInstance().loadNamedProfile(mProfileName);
+            this.getProfile(mProfileName);
         } else if (mParent && mParent.mProfileName) {
             this.mProfileName = mParent.mProfileName;
-            this.profile = Profiles.getInstance().loadNamedProfile(mParent.mProfileName);
+            this.getProfile(mParent.mProfileName);
         }
         this.etag = etag ? etag : "";
         utils.applyIcons(this);
@@ -106,6 +106,13 @@ export class ZoweUSSNode extends vscode.TreeItem implements IZoweTreeNode {
      */
     public getProfileName(): string {
         return this.mProfileName;
+    }
+
+    /**
+     * Testing async profiles function.
+     */
+    public async getProfile(profileName) {
+        this.profile = await (await Profiles.getInstanceFor()).loadNamedProfile(profileName);
     }
 
     /**

@@ -79,31 +79,31 @@ describe("Profile class unit tests", () => {
     });
 
     it("should create an instance", async () => {
-        const profiles = await Profiles.createInstance(log);
-        expect(Profiles.getInstance()).toBe(profiles);
+        const profiles = await Profiles.getInstanceFor();
+        expect(Profiles.getInstanceFor()).toBe(profiles);
     });
 
     it("should return all profiles ", async () => {
-        const profiles = await Profiles.createInstance(log);
+        const profiles = await Profiles.getInstanceFor();
         const loadedProfiles = profiles.allProfiles;
         expect(loadedProfiles).toEqual([profileOne, profileTwo]);
     });
 
     it("should return a default profile", async () => {
-        const profiles = await Profiles.createInstance(log);
+        const profiles = await Profiles.getInstanceFor();
         const loadedProfiles = profiles.getDefaultProfile();
         expect(loadedProfiles).toEqual(profileOne);
     });
 
     it("should load a named profile ", async () => {
-        const profiles = await Profiles.createInstance(log);
+        const profiles = await Profiles.getInstanceFor();
         const loadedProfile = profiles.loadNamedProfile("profile2");
         expect(loadedProfile).toEqual(profileTwo);
     });
 
     it("should fail to load a non existing profile ", async () => {
         let success = false;
-        const profiles = await Profiles.createInstance(log);
+        const profiles = await Profiles.getInstanceFor();
         try {
             profiles.loadNamedProfile("profile3");
         } catch (error) {
@@ -116,7 +116,7 @@ describe("Profile class unit tests", () => {
     describe("Creating a new connection", () => {
         let profiles: Profiles;
         beforeEach(async () => {
-            profiles = await Profiles.createInstance(log);
+            profiles = await Profiles.getInstanceFor();
             Object.defineProperty(Profiles, "getInstance", {
                 value: jest.fn(() => {
                     return {
@@ -374,7 +374,7 @@ describe("Profile class unit tests", () => {
     });
 
     it("should route through to spawn. Covers conditional test", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstanceFor", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "profile1", profile: {}, type: "zosmf"}, {name: "profile2", profile: {}, type: "zosmf"}],
@@ -410,13 +410,13 @@ describe("Profile class unit tests", () => {
         });
         mockJSONParse.mockReturnValueOnce([profileOne, profileTwo]);
         mockJSONParse.mockReturnValueOnce(profileOne);
-        await Profiles.createInstance(log);
-        expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
+        await Profiles.getInstanceFor();
+        expect((await Profiles.getInstanceFor()).allProfiles).toEqual([profileOne, profileTwo]);
     });
 
     it("should route through to spawn. Coverage of error handling", async () => {
         // tslint:disable-next-line: prefer-const
-        Object.defineProperty(Profiles, "getInstance", {
+        Object.defineProperty(Profiles, "getInstanceFor", {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{name: "profile1", profile: {}, type: "zosmf"}, {name: "profile2", profile: {}, type: "zosmf"}],
@@ -450,7 +450,7 @@ describe("Profile class unit tests", () => {
         });
         mockJSONParse.mockReturnValueOnce([profileOne, profileTwo]);
         mockJSONParse.mockReturnValueOnce(profileOne);
-        await Profiles.createInstance(log);
-        expect(Profiles.getInstance().allProfiles).toEqual([profileOne, profileTwo]);
+        await Profiles.getInstanceFor();
+        expect((await Profiles.getInstanceFor()).allProfiles).toEqual([profileOne, profileTwo]);
     });
 });

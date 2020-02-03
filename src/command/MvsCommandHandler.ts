@@ -11,7 +11,7 @@
 
 import * as zowe from "@brightside/core";
 import * as vscode from "vscode";
-import { IProfileLoaded, ISession, Session, IProfile } from "@brightside/imperative";
+import { IProfileLoaded, ISession, Session, IProfile, Logger } from "@brightside/imperative";
 import * as nls from "vscode-nls";
 import * as extension from "../extension";
 import { Profiles } from "../Profiles";
@@ -68,7 +68,7 @@ export class MvsCommandHandler {
             let usrNme: string;
             let passWrd: string;
             let baseEncd: string;
-            const profiles = Profiles.getInstance();
+            const profiles = await Profiles.getInstanceFor();
             const allProfiles: IProfileLoaded[] = profiles.allProfiles;
             const profileNamesList = allProfiles.map((temprofile) => {
                 return temprofile.name;
@@ -84,7 +84,7 @@ export class MvsCommandHandler {
                 const updProfile = zosmfProfile.profile as ISession;
                 if ((!updProfile.user) || (!updProfile.password)) {
                     try {
-                        const values = await Profiles.getInstance().promptCredentials(zosmfProfile.name);
+                        const values = await(await Profiles.getInstanceFor()).promptCredentials(zosmfProfile.name);
                         if (values !== undefined) {
                             usrNme = values [0];
                             passWrd = values [1];

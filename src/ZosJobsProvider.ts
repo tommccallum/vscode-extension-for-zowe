@@ -110,12 +110,12 @@ export class ZosJobsProvider implements IZoweTree<Job> {
     public async addSession(sessionName?: string) {
         // Loads profile associated with passed sessionName, default if none passed
         if (sessionName) {
-            const zosmfProfile: IProfileLoaded = Profiles.getInstance().loadNamedProfile(sessionName);
+            const zosmfProfile: IProfileLoaded = await (await Profiles.getInstanceFor()).loadNamedProfile(sessionName);
             if (zosmfProfile) {
                 this.addSingleSession(zosmfProfile);
             }
         } else {
-            const zosmfProfiles: IProfileLoaded[] = Profiles.getInstance().allProfiles;
+            const zosmfProfiles: IProfileLoaded[] = await (await Profiles.getInstanceFor()).allProfiles;
             for (const zosmfProfile of zosmfProfiles) {
                 // If session is already added, do nothing
                 if (this.mSessionNodes.find((tempNode) => tempNode.label.trim() === zosmfProfile.name)) {
@@ -128,7 +128,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
                 }
             }
             if (this.mSessionNodes.length === 1) {
-                this.addSingleSession(Profiles.getInstance().getDefaultProfile());
+                this.addSingleSession(await (await Profiles.getInstanceFor()).getDefaultProfile());
             }
         }
         this.refresh();
@@ -200,7 +200,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
             }
             if ((!element.session.ISession.user) || (!element.session.ISession.password)) {
                 try {
-                    const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                    const values = await (await Profiles.getInstanceFor()).promptCredentials(sesNamePrompt);
                     if (values !== undefined) {
                         usrNme = values [0];
                         passWrd = values [1];
@@ -241,12 +241,12 @@ export class ZosJobsProvider implements IZoweTree<Job> {
         this.log = log;
         this.log.debug(localize("initializeFavorites.log.debug", "initializing favorites"));
         const lines: string[] = this.mHistory.readFavorites();
-        lines.forEach((line) => {
+        lines.forEach(async (line) => {
             const profileName = line.substring(1, line.lastIndexOf("]"));
             const nodeName = (line.substring(line.indexOf(":") + 1, line.indexOf("{"))).trim();
             const sesName = line.substring(1, line.lastIndexOf("]")).trim();
             try {
-                const zosmfProfile = Profiles.getInstance().loadNamedProfile(sesName);
+                const zosmfProfile = await (await Profiles.getInstanceFor()).loadNamedProfile(sesName);
                 let favJob: Job;
                 if (line.substring(line.indexOf("{") + 1, line.lastIndexOf("}")) === extension.JOBS_JOB_CONTEXT) {
                     favJob = new Job(line.substring(0, line.indexOf("{")), vscode.TreeItemCollapsibleState.Collapsed, this.mFavoriteSession,
@@ -366,7 +366,7 @@ export class ZosJobsProvider implements IZoweTree<Job> {
         }
         if ((!node.session.ISession.user) || (!node.session.ISession.password)) {
             try {
-                const values = await Profiles.getInstance().promptCredentials(sesNamePrompt);
+                const values = await (await Profiles.getInstanceFor()).promptCredentials(sesNamePrompt);
                 if (values !== undefined) {
                     usrNme = values [0];
                     passWrd = values [1];

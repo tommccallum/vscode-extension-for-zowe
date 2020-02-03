@@ -41,15 +41,28 @@ let IConnection: {
 
 export class Profiles {
     // Processing stops if there are no profiles detected
-    public static async createInstance(log: Logger): Promise<Profiles> {
-        Profiles.loader = new Profiles(log);
-        await Profiles.loader.refresh();
-        return Profiles.loader;
+    // public static async createInstance(log: Logger): Promise<Profiles> {
+    //     Profiles.loader = new Profiles(log);
+    //     await Profiles.loader.refresh();
+    //     return Profiles.loader;
+    // }
+
+    // public static getInstance(): Profiles {
+    //     return Profiles.loader;
+    // }
+
+
+    public static async getInstanceFor(type: string="zosmf", log?: Logger) {
+        let aProfile = Profiles.allProfilesInstances.get(type);
+        if (!aProfile) {
+            aProfile = new Profiles(type);
+            Profiles.allProfilesInstances.set(type, aProfile);
+            await aProfile.refresh();
+        }
+        return aProfile;
     }
 
-    public static getInstance(): Profiles {
-        return Profiles.loader;
-    }
+    private static allProfilesInstances: Map<string, Profiles> = new Map();
 
     private static loader: Profiles;
 
@@ -72,7 +85,7 @@ export class Profiles {
     private profilesByType = new Map<string, IProfileLoaded[]>();
     private defaultProfileByType = new Map<string, IProfileLoaded>();
     private profileManagerByType= new Map<string, CliProfileManager>();
-    private constructor(private log: Logger) {
+    private constructor(private type: string, log?: Logger) {
     }
 
     public loadNamedProfile(name: string, type?: string): IProfileLoaded {
