@@ -1,0 +1,5 @@
+{
+    "submitJcl.jobSubmitted": "Job submitted ",
+    "submitJcl.jobSubmissionFailed": "Job submission failed\n",
+    "submitJcl.checkProfile": "Profile is invalid"
+}

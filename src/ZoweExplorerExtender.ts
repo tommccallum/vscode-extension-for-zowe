@@ -16,6 +16,8 @@ import { ZoweExplorerApi } from "./api/ZoweExplorerApi";
 import { Profiles } from "./Profiles";
 import { getProfile, getLinkedProfile } from "./utils/profileLink";
 import { IZoweTree } from "./api/IZoweTree";
+import { SessionManager, createSessionManager } from "./dataset/Session";
+import { uploadFile, submitJob } from "./dataset/DirectActions";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -101,4 +103,46 @@ export class ZoweExplorerExtender implements ZoweExplorerApi.IApiExplorerExtende
         this.ussFileProvider?.addSession(undefined, profileType);
         this.jobsProvider?.addSession(undefined, profileType);
     }
+
+    /**
+     * Get the session manager which has the loaded profiles in, tree independent
+     */
+    public getSessionManager(): Promise<SessionManager> {
+        return createSessionManager();
+    }
+
+    /**
+     * Upload a dataset without the need to know what the node is.
+     * If it can find the node in the tree, it will refresh it so that the new file will show up.
+     * @param {IProfileLoaded} profile
+     * @param {string} fileName
+     * @param {string} datasetName
+     */
+    public async uploadDataset(profile: IProfileLoaded, fileName: string, datasetName: string ) {
+        await uploadFile(profile, fileName, datasetName).then(() => {
+            if ( this.datasetProvider ) {
+                const node = this.datasetProvider.findNodeInTree(profile, datasetName);
+                if ( node ) {
+                    this.datasetProvider.refreshElement(node);
+                }
+            }
+        });
+    }
+
+    /**
+     * Submit a job without knowing the node in the tree.
+     * @param {IProfileLoaded} profile
+     * @param {string} datasetName
+     */
+    public async submitJob(profile: IProfileLoaded, datasetName: string ) {
+        await submitJob(profile, datasetName).then(() => {
+            if ( this.datasetProvider ) {
+                const node = this.datasetProvider.findNodeInTree(profile, datasetName);
+                if ( node ) {
+                    this.datasetProvider.refreshElement(node);
+                }
+            }
+        });
+    }
+
 }

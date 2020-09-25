@@ -68,6 +68,10 @@ export class USSTree extends ZoweTreeProvider implements IZoweTree<IZoweUSSTreeN
         this.treeView = vscode.window.createTreeView("zowe.uss.explorer", {treeDataProvider: this});
     }
 
+    public findNodeInTree(profile: IProfileLoaded, itemName: string ): IZoweUSSTreeNode {
+        return null;
+    }
+
     /**
      * Method for renaming a USS Node. This could be a Favorite Node
      *

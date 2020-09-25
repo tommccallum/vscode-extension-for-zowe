@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import { IZoweNodeType, IZoweDatasetTreeNode, IZoweUSSTreeNode } from "./IZoweTreeNode";
 import { PersistenceSchemaEnum } from "../globals";
+import { IProfileLoaded } from "@zowe/imperative";
 
 /**
  * The base interface for Zowe tree browsers that implement the
@@ -243,4 +244,12 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T> {
      * @param {IZoweNodeType} sessionNode the session to use
      */
     openItemFromPath?(path: string, sessionNode: IZoweNodeType);
+
+    /**
+     * Find a node in the tree given a profile and a label
+     * @param {IProfileLoaded} profile
+     * @param {string} label
+     */
+    findNodeInTree(profile: IProfileLoaded, itemName: string ): IZoweNodeType;
+
 }

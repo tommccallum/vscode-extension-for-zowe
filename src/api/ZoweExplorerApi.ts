@@ -12,6 +12,7 @@
 import * as zowe from "@zowe/cli";
 import { IProfileLoaded, Session } from "@zowe/imperative";
 import { TreeItem } from "vscode";
+import { IZoweSessionManager } from "./IZoweSessionManager";
 
 /**
  * This namespace provides interfaces for all the external APIs provided by this VS Code Extension.
@@ -486,6 +487,11 @@ export namespace ZoweExplorerApi {
          * down dialogs.
          */
         reloadProfiles(): Promise<void>;
+
+        getSessionManager(): Promise<IZoweSessionManager>;
+        uploadDataset(profile: IProfileLoaded, fileName: string, datasetName: string ): void;
+        submitJob(profile: IProfileLoaded, datasetName: string ): void;
+
     }
 
     /**

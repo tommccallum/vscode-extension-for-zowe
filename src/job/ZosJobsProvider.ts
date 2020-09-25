@@ -71,6 +71,11 @@ export class ZosJobsProvider extends ZoweTreeProvider implements IZoweTree<IZowe
         this.treeView = vscode.window.createTreeView("zowe.jobs", {treeDataProvider: this});
     }
 
+    public findNodeInTree(profile: IProfileLoaded, itemName: string ): IZoweJobTreeNode {
+        return null;
+    }
+
+
     public rename(node: IZoweJobTreeNode) {
         throw new Error("Method not implemented.");
     }

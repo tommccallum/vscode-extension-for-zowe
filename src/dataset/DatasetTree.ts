@@ -617,6 +617,15 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
     }
 
     /**
+     * Find a node in the dataset tree
+     * @param {IProfileLoaded} profile
+     * @param {string} itemName
+     */
+    public findNodeInTree(profile: IProfileLoaded, itemName: string ): IZoweDatasetTreeNode {
+        return this.searchFavoritesForNode(profile, itemName) || this.searchSessionForNode(profile, itemName);
+    }
+
+    /**
      * Rename data set member
      *
      * @param node - The node
@@ -747,4 +756,45 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             this.mHistory.addSession(profile.name);
         }
     }
+
+    /**
+     * Search favorites list for our node
+     * @param {IProfileLoaded} profile
+     * @param {string} itemName
+     */
+    private searchFavoritesForNode(profile: IProfileLoaded, itemName: string ): IZoweDatasetTreeNode {
+        let nodeLabelToFind: string = itemName;
+        if ( itemName.indexOf("(") !== -1 ) {
+            nodeLabelToFind = itemName.substr(0, itemName.indexOf("("));
+        }
+        const matchingNode = this.mFavorites.find((node) => {
+            let labelToMatch = node.label;
+            if ( node.label.indexOf("[") === 0 ) {
+                labelToMatch = labelToMatch.substr(labelToMatch.indexOf(":")+2);
+            }
+            return labelToMatch === nodeLabelToFind;
+        });
+        return matchingNode;
+    }
+
+    /**
+     * Search the session list for the node
+     * @param {IProfileLoaded} profile
+     * @param {string} itemName
+     */
+    private searchSessionForNode(profile: IProfileLoaded, itemName: string ): IZoweDatasetTreeNode {
+        let nodeLabelToFind: string = itemName;
+        if ( itemName.indexOf("(") !== -1 ) {
+            nodeLabelToFind = itemName.substr(0, itemName.indexOf("("));
+        }
+        const sessionNode = this.mSessionNodes.find((session) => session.label.trim() === profile.name.trim());
+        if (sessionNode) {
+            const matchingNode = sessionNode.children.find((node) => {
+                return node.label === nodeLabelToFind;
+            });
+            return matchingNode;
+        }
+        return null;
+    }
+
 }
